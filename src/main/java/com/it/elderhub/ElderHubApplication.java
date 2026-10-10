@@ -9,10 +9,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @MapperScan("com.it.elderhub.mapper")
 public class ElderHubApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(ElderHubApplication.class, args);
         log.info("颐养中心系统启动成功");
     }
-
 }
+

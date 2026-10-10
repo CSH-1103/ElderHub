@@ -1,6 +1,6 @@
 package com.it.elderhub.controller;
 
-import com.it.common.Result;
+import com.it.elderhub.common.Result;
 import com.it.elderhub.entity.User;
 import com.it.elderhub.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;

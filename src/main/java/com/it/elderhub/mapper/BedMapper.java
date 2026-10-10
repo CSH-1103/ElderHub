@@ -1,18 +1,25 @@
 package com.it.elderhub.mapper;
 
-import com.it.elderhub.entity.Bed;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.it.elderhub.entity.Bed;
+import com.it.elderhub.query.bed.BedDetailsQuery;
+import com.it.elderhub.vo.bed.BedDetailsVO;
+import com.it.elderhub.vo.bed.BedStatisticsVO;
+import com.it.elderhub.vo.bed.RoomBedVO;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+import java.util.List;
 
-/**
-* @author Ljz
-* @description 针对表【bed(床位信息表)】的数据库操作Mapper
-* @createDate 2026-10-08 09:52:05
-* @Entity com.it.elderhub.entity.Bed
-*/
+@Repository
 public interface BedMapper extends BaseMapper<Bed> {
 
-}
+    Page<BedDetailsVO> selectBedPage(Page<BedDetailsVO> page, @Param("query") BedDetailsQuery query);
 
+    BedStatisticsVO selectBedStatistics();
+
+    List<RoomBedVO> selectGroupByRoom();
+}
 
 
 
