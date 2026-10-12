@@ -38,52 +38,48 @@ ElderHub 是一套面向养老院、社区养老中心等养老机构的**前后
 - 图标库：Element Plus 内置图标 + FontAwesome
 - 打包工具：Vite
 - 数据可视化：ECharts
-- 
+
 ## 项目目录结构
 
 ElderHub
-├── elderhub-admin-front        # 前端项目文件夹
-│   ├── public                  # 静态资源（图片、favicon等）
-│   ├── src
-│   │   ├── api                 # 接口请求封装，按模块划分请求函数
-│   │   ├── assets              # 静态资源：css、图片
-│   │   ├── components          # 公共组件（分页、搜索栏、弹窗等）
-│   │   ├── layout              # 后台管理系统布局（侧边栏、头部导航）
-│   │   ├── router              # 路由配置，菜单路由、权限路由控制
-│   │   ├── store               # Pinia状态管理，保存用户信息、token
-│   │   ├── utils               # 前端工具类（时间格式化、请求封装）
-│   │   ├── views               # 页面视图，各个业务页面
-│   │   │   ├── user            # 用户管理页面
-│   │   │   ├── elder           # 老人信息管理页面
-│   │   │   ├── bed             # 床位管理页面
-│   │   │   ├── nurse           # 护理服务页面
-│   │   │   ├── health          # 健康监测页面
-│   │   │   └── system          # 系统管理页面
-│   │   ├── App.vue             # 根组件
-│   │   └── main.js             # 入口文件
-│   ├── vite.config.js          # vite打包配置
-│   └── package.json            # 前端依赖配置
-│
-├── docs                # 项目文档、需求文档、接口文档、原型、会议记录
-├── sql                 # 数据库初始化脚本、建表语句、基础测试数据脚本
-├── src                 # 后端Java代码
-│   └── main
-│       └── java/com/elderhub
-│           ├── controller      # 控制器层，接收前端请求，参数接收与响应返回
-│           ├── service         # 业务逻辑层接口，定义业务方法
-│           │   └── impl        # Service接口实现类，编写核心业务逻辑
-│           ├── mapper          # MyBatis数据访问层，数据库交互接口
-│           ├── entity          # 数据库实体类，与数据库表一一映射
-│           ├── dto             # 数据传输对象，接收前端传入参数
-│           ├── vo              # 返回视图对象，封装返回给前端的数据
-│           ├── config          # 项目配置类（跨域、MyBatis、拦截器、Knife4j等）
-│           └── util            # 工具类（日期、加密、结果封装、字符串工具等公共工具）
-│       └── resources
-│           ├── mapper          # MyBatis xml映射文件，编写SQL语句
-│           └── application.yml # 项目核心配置文件（数据库、端口、日志、knife4j等）
-├── pom.xml                     # Maven依赖配置，管理项目jar包依赖
-├── .gitignore                  # Git忽略文件，过滤不需要提交的文件（idea配置、日志、编译产物等）
-└── readme.md                   # 项目说明文档
+- elderhub-admin-front        # 前端项目文件夹
+    - public                    # 静态资源（图片、favicon等）
+    - src
+        - api                     # 接口请求封装，按模块划分请求函数
+        - assets                  # 静态资源：css、图片
+        - components              # 公共组件（分页、搜索栏、弹窗等）
+        - layout                  # 后台管理系统布局（侧边栏、头部导航）
+        - router                  # 路由配置，菜单路由、权限路由控制
+        - store                   # Pinia状态管理，保存用户信息、token
+        - utils                   # 前端工具类（时间格式化、请求封装）
+        - views                   # 页面视图，各个业务页面
+            - user                  # 用户管理页面
+            - elder                 # 老人信息管理页面
+            - bed                   # 床位管理页面
+            - nurse                 # 护理服务页面
+            - health                # 健康监测页面
+- vite.config.js              # vite打包配置
+- package.json                # 前端依赖配置
+- docs                        # 项目文档、需求文档、接口文档、原型、会议记录
+- sql                         # 数据库初始化脚本、建表语句、基础测试数据脚本
+- src                         # 后端Java代码
+    - main
+        - java/com/elderhub
+            - controller             # 控制器层，接收前端请求，参数接收与响应返回
+            - service               # 业务逻辑层接口，定义业务方法
+            - impl                  # Service接口实现类，编写核心业务逻辑
+            - mapper                # MyBatis数据访问层，数据库交互接口
+            - entity                # 数据库实体类，与数据库表一一映射
+            - dto                   # 数据传输对象，接收前端传入参数
+            - vo                    # 返回视图对象，封装返回给前端的数据
+            - config                # 项目配置类（跨域、MyBatis、拦截器、Knife4j等）
+            - util                  # 工具类（日期、加密、结果封装、字符串工具等公共工具）
+        - resources
+            - mapper                # MyBatis xml映射文件，编写SQL语句
+            - application.yml        # 项目核心配置文件（数据库、端口、日志、knife4j等）
+- pom.xml                     # Maven依赖配置，管理项目jar包依赖
+- .gitignore                  # Git忽略文件，过滤不需要提交的文件（idea配置、日志、编译产物等）
+- readme.md                   # 项目说明文档
 
 ## 功能模块
 
