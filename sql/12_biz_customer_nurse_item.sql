@@ -9,5 +9,7 @@ CREATE TABLE `customer_nurse_item` (
   `buy_time` date NOT NULL COMMENT '购买日期',
   `maturity_time` date NOT NULL COMMENT '服务到期日期',
   `is_deleted` int DEFAULT '0' COMMENT '逻辑删除（0:正常 1:删除）',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户已购护理条目表';
