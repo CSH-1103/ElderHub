@@ -8,7 +8,7 @@ import lombok.Data;
 
 /**
  * 护理级别表
- * @TableName nurselevel
+ * @TableName nurse_level
  */
 @Data
 @TableName(value = "nurse_level")
