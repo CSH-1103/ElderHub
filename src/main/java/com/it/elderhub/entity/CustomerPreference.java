@@ -38,6 +38,12 @@ public class CustomerPreference {
     private String attention;
 
     /**
+     * 过敏原（逗号分隔，如：花生,海鲜）
+     */
+    @TableField(value = "allergies")
+    private String allergies;
+
+    /**
      * 备注
      */
     @TableField(value = "remark")
