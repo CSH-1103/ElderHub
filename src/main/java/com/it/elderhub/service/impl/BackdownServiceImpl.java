@@ -72,7 +72,7 @@ public class BackdownServiceImpl extends ServiceImpl<BackdownMapper, Backdown>
     public void auditBackDown(Integer id, Integer auditStatus, String auditPerson) {
         Backdown backdown = this.getById(id);
         if(backdown==null||backdown.getAuditstatus()!=0){
-            throw new RuntimeException("退住单不存在或已审核");
+            throw new IllegalArgumentException("退住单不存在或已审核");
         }
         //更新审核信息
         backdown.setAuditstatus(auditStatus);
@@ -130,7 +130,7 @@ public class BackdownServiceImpl extends ServiceImpl<BackdownMapper, Backdown>
             vo.setRetreatReason(item.getRetreatreason());
             vo.setAuditStatus(item.getAuditstatus());
             vo.setAuditPerson(item.getAuditperson());
-            vo.setAuditTime(item.getAudittime().toLocalDate());
+            vo.setAuditTime(item.getAudittime());
             vo.setRemarks(item.getRemarks());
             return vo;
         }).collect(Collectors.toList());

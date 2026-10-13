@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 
 /**
  * 护理项目表
- * @TableName nursecontent
+ * @TableName nurse_content
  */
 @Data
 @TableName(value = "nurse_content")
