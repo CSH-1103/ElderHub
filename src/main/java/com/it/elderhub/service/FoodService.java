@@ -2,6 +2,7 @@ package com.it.elderhub.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.it.elderhub.entity.Food;
+import com.it.elderhub.vo.DailyMenuVO;
 
 /**
  * 食品信息Service接口
@@ -43,4 +44,11 @@ public interface FoodService {
      * @param id 食品ID
      */
     void removeFood(Integer id);
+
+    /**
+     * 按日期查询每日菜单（三餐，关联菜品与营养标签）
+     * @param date 日期（yyyy-MM-dd）
+     * @return 每日菜单（早餐/午餐/晚餐）
+     */
+    DailyMenuVO getDailyMenu(String date);
 }

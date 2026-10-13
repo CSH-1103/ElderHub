@@ -49,4 +49,16 @@ public class Food {
      */
     @TableField(value = "food_img")
     private String food_img;
+
+    /**
+     * 营养标签（逗号分隔，如：LOW_SALT,LOW_FAT）
+     */
+    @TableField(value = "nutrient_tags")
+    private String nutrient_tags;
+
+    /**
+     * 过敏原/忌口（逗号分隔，如：花生,海鲜）
+     */
+    @TableField(value = "allergens")
+    private String allergens;
 }

@@ -2,6 +2,9 @@ package com.it.elderhub.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.it.elderhub.entity.CustomerPreference;
+import com.it.elderhub.vo.PreferenceVO;
+
+import java.util.List;
 
 /**
  * 客户饮食喜好Service接口
@@ -41,4 +44,17 @@ public interface CustomerPreferenceService {
      * @param id 喜好ID
      */
     void removePreference(Integer id);
+
+    /**
+     * 客户饮食偏好列表（含客户姓名、过敏原/忌口数组，供前端餐饮页客户下拉）
+     * @return 全部在住客户的偏好
+     */
+    List<PreferenceVO> listCustomerPreferences();
+
+    /**
+     * 单个客户饮食偏好（含客户姓名、过敏原/忌口数组）
+     * @param customerId 客户ID
+     * @return 客户偏好
+     */
+    PreferenceVO getCustomerPreference(Integer customerId);
 }
