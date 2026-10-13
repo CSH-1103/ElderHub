@@ -9,7 +9,5 @@ CREATE TABLE `nurse_record` (
   `nursing_content` varchar(255) DEFAULT NULL COMMENT '本次护理内容',
   `nursing_count` int NOT NULL COMMENT '本次执行次数',
   `is_deleted` int NOT NULL DEFAULT '0' COMMENT '逻辑删除（0:正常 1:删除）',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='护理执行记录表';

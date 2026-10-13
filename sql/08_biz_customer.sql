@@ -19,9 +19,6 @@ CREATE TABLE `customer` (
   `psychosomatic_state` varchar(255) DEFAULT NULL COMMENT '身心状况描述',
   `attention` varchar(255) DEFAULT NULL COMMENT '护理注意事项',
   `filepath` varchar(50) NOT NULL COMMENT '头像文件路径',
-  `user_id` int DEFAULT '-1' COMMENT '健康管家ID（-1:无管家）',
   `is_deleted` int NOT NULL DEFAULT '0' COMMENT '逻辑删除（0:正常 1:删除）',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='在住客户/老人表';
