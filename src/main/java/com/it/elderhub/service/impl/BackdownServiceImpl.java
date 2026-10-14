@@ -6,9 +6,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.it.elderhub.dto.BackDownAddDTO;
 import com.it.elderhub.dto.BackDownQuery;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.it.elderhub.entity.Backdown;
 import com.it.elderhub.entity.Bed;
+import com.it.elderhub.entity.BedDetails;
 import com.it.elderhub.entity.Customer;
+import com.it.elderhub.mapper.BedDetailsMapper;
 import com.it.elderhub.mapper.BedMapper;
 import com.it.elderhub.mapper.CustomerMapper;
 import com.it.elderhub.service.BackdownService;
@@ -25,6 +28,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +50,8 @@ public class BackdownServiceImpl extends ServiceImpl<BackdownMapper, Backdown>
     private BedMapper bedMapper;
     @Autowired
     private CustomerMapper customerMapper;
+    @Autowired
+    private BedDetailsMapper bedDetailsMapper;
     /**
      *
      * @param query
@@ -57,7 +64,7 @@ public class BackdownServiceImpl extends ServiceImpl<BackdownMapper, Backdown>
         //模糊查询客户姓名
         if(query.getCustomerName()!=null&& !query.getCustomerName().isEmpty()){
             wrapper.apply(
-                    "custom_id in (select id from customer where name like {0})","%"+query.getCustomerName()+"%"
+                    "customer_id in (select id from customer where customer_name like {0})","%"+query.getCustomerName()+"%"
             );
         }
         wrapper.orderByDesc(Backdown::getRetreattime);
@@ -79,16 +86,36 @@ public class BackdownServiceImpl extends ServiceImpl<BackdownMapper, Backdown>
         backdown.setAuditperson(auditPerson);
         backdown.setAudittime(LocalDateTime.now());
         this.updateById(backdown);
-        //审核通过而且为正常/死亡退住 释放床位
+        //审核通过且为正常/死亡退住：释放床位、关闭入住记录、逻辑删除客户（保留床位类型不处理）
         if(auditStatus ==1&& (backdown.getRetreattype()==NORMAL||backdown.getRetreattype()==DEATH)){
             Customer customer = customerMapper.selectById(backdown.getCustomer_id());
-            if(customer!=null&& customer.getBed_id()!=null){
-                Bed bed = bedMapper.selectById(customer.getBed_id());
-                if(bed!=null){
-                    bed.setBed_status(FREE);
-                    bedMapper.updateById(bed);
-                    log.info("退住审核通过，释放床位[{}]",bed.getId());
+            if(customer!=null){
+                //1.释放床位
+                if(customer.getBed_id()!=null){
+                    Bed bed = bedMapper.selectById(customer.getBed_id());
+                    if(bed!=null){
+                        bed.setBed_status(FREE);
+                        bedMapper.updateById(bed);
+                        log.info("退住审核通过，释放床位[{}]",bed.getId());
+                    }
                 }
+                //2.关闭当前生效的入住记录（逻辑删除，保留使用历史）
+                BedDetails activeDetails = bedDetailsMapper.selectOne(
+                        new QueryWrapper<BedDetails>()
+                                .eq("customer_id", customer.getId())
+                                .eq("is_deleted", 0)
+                                .orderByDesc("id")
+                                .last("LIMIT 1")
+                );
+                if(activeDetails!=null){
+                    activeDetails.setEnd_date(new Date());
+                    activeDetails.setIs_deleted(1);
+                    bedDetailsMapper.updateById(activeDetails);
+                }
+                //3.逻辑删除客户（退住完成，不再出现在在住客户中；保留行以关联退住/入住历史）
+                customer.setIs_deleted(1);
+                customerMapper.updateById(customer);
+                log.info("退住审核通过，客户[{}]已退住", customer.getId());
             }
         }
     }
@@ -121,10 +148,20 @@ public class BackdownServiceImpl extends ServiceImpl<BackdownMapper, Backdown>
     }
 
     private PageResult<BackDownVO> convertToPageResult(IPage<Backdown> doPage) {
-        List<BackDownVO> voList = doPage.getRecords().stream().map(item -> {
+        List<Backdown> records = doPage.getRecords();
+        // 批量关联客户姓名（含已逻辑删除的客户，保证退住历史仍显示姓名）
+        List<Integer> customerIds = records.stream()
+                .map(Backdown::getCustomer_id).filter(Objects::nonNull).distinct()
+                .collect(Collectors.toList());
+        Map<Integer, String> customerNameMap = customerIds.isEmpty() ? java.util.Map.of()
+                : customerMapper.selectBatchIds(customerIds).stream()
+                .collect(Collectors.toMap(Customer::getId, Customer::getCustomer_name, (v1, v2) -> v1));
+
+        List<BackDownVO> voList = records.stream().map(item -> {
             BackDownVO vo = new BackDownVO();
             vo.setId(item.getId());
             vo.setCustomerId(item.getCustomer_id());
+            vo.setCustomerName(customerNameMap.get(item.getCustomer_id()));
             vo.setRetreatTime(item.getRetreattime());
             vo.setRetreatType(item.getRetreattype());
             vo.setRetreatReason(item.getRetreatreason());
