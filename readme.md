@@ -191,40 +191,71 @@ ElderHub
 >
 > 所有表都包含创建时间、更新时间、创建人、更新人字段，用于数据追踪。
 
+The user wants the startup section matching their own demo and the existing readme style. Their readme at github.com/Ljz4777/ElderHub/edit/master/readme.md. Let me fetch that readme to match its style. The local readme.md on disk is my rewritten version which they edited (admin0001). But the GitHub master readme may differ. Let me fetch it.Fetch the raw readme from GitHub master branch to see existing style. Use raw.githubusercontent.com.
+
+Now I understand the existing readme style on GitHub master. The user wants a "如何启动" section matching their own demo's actual setup (Spring Boot 3 + JDK 17, `elderhub` db, frontend path `elderhub-frontend/elderhub-frontend`, seed script, ports 8080/5173) but written in the style of their existing readme — which uses "## 项目部署运行 / ### 环境准备 / **后端** **前端** / ### 运行步骤 / #### 后端启动 / #### 前端启动" numbered-step style.
+
+The existing readme's 部署运行 section has outdated info (JDK 1.8, elderhub_db, elderhub-admin-front, request.js edit, Knife4j). The user wants copy-paste content for "how to start" that matches their real demo. So I should write the section in the same style (#### 后端启动 / #### 前端启动 numbered lists) but with corrected facts. Should also include database startup explicitly — user asked 前端、后端、数据库怎么启动.
+
+Match the existing style: "## 项目部署运行", "### 环境准备" with **后端**/**前端** bullet groups, "### 运行步骤" with "#### 数据库初始化" / "#### 后端启动" / "#### 前端启动" numbered steps. Keep their numbered-list style rather than tables. Also add 演示账号 since readme style uses simple lists.
+
+Facts: JDK 17, MySQL 8.0, Maven Wrapper, Node 16+, db `elderhub` root/123456, sql/ scripts 00~18, frontend dir elderhub-frontend/elderhub-frontend, npm install, npm run seed, mvnw spring-boot:run, port 8080 context /ElderHub, npm run dev, 5173, proxy /api configured, accounts admin/123456, butler/123456 (readme on disk says admin0001 — user's manual edit; the GitHub master readme doesn't have accounts. The user said "根据我自己的demo以及readme已有的风格" — readme style refers to GitHub readme. I'll use butler since seed generates it... but earlier I noted their local edit uses admin0001. Hmm. To be safe, keep both? Last message I used butler and user didn't object. Keep butler, maybe add admin0001 not needed. Keep it simple: admin and butler.
+
+Output only the markdown block, no extra text? User said "其他任何多余的内容都不要出现" previously, repeated now. So output just the code block.
+
 ## 项目部署运行
 
 ### 环境准备
 
 **后端**
-
-- JDK 1.8
+- JDK 17
 - MySQL 8.0
-- Maven 3.6+
+- Maven 3.6+（也可使用项目自带 Maven Wrapper，无需单独安装）
 - IDEA 开发工具
 
 **前端**
-
-- Node.js 16+
-- npm / yarn
+- Node.js 16+（建议 18+）
+- npm
 
 ### 运行步骤
 
-#### 后端启动
+#### 数据库启动
+1. 启动本机 MySQL 服务
+2. 创建数据库 `elderhub`，执行 `sql` 目录下的全部脚本（`00` 建库，`01~18` 建表及基础数据），按文件名顺序依次执行
+3. 数据库默认账号密码为 `root / 123456`，如不一致请修改 `src/main/resources/application.yml` 中的数据库连接配置
 
-1. 克隆项目到本地
-2. 创建数据库 `elderhub_db`，执行 `sql` 目录下的建表脚本与基础数据脚本
-3. 修改 `resources/application.yml` 文件，配置数据库 IP、端口、用户名、密码
-4. IDEA 中 Maven 刷新，加载全部依赖包
-5. 找到项目主启动类，运行 SpringBoot 项目
-6. 启动成功后，访问 Knife4j 接口文档地址，查看并调试接口
+#### 后端启动
+1. 克隆项目到本地，使用 IDEA 打开项目根目录
+2. Maven 刷新，加载全部依赖包
+3. 运行主启动类 `ElderHubApplication`，或在项目根目录执行命令启动：
+
+```
+.\mvnw.cmd spring-boot:run
+```
+
+4. 启动成功后，后端服务地址为 `http://localhost:8080/ElderHub`
 
 #### 前端启动
-
-1. 进入前端项目目录 `elderhub-admin-front`
+1. 进入前端项目目录 `elderhub-frontend/elderhub-frontend`
 2. 安装依赖
-3. 修改 `src/api/request.js` 后端接口地址，指向后端服务地址
+
+```
+npm install
+```
+
+3. 初始化演示账号（首次运行执行一次即可）
+
+```
+npm run seed
+```
+
 4. 本地开发启动
-5. 浏览器访问前端页面，输入账号密码登录
+
+```
+npm run dev
+```
+
+5. 浏览器访问 `http://localhost:5173`，输入账号密码登录（前端已配置 `/api` 代理转发到后端服务，无需修改接口地址）
 6. 打包部署（生产环境）
 
 ```
@@ -232,6 +263,15 @@ npm run build
 ```
 
 打包完成后 dist 文件夹可部署到 Nginx 静态服务器
+
+### 演示账号
+
+| 账号 | 密码 | 角色 |
+|---|---|---|
+| admin | 123456 | 系统管理员 |
+| butler | 123456 | 健康管家 |
+
+> 启动顺序速查：**启动 MySQL → 执行 sql 脚本 → 启动后端 → npm run seed → 启动前端**
 
 ## 项目亮点
 
