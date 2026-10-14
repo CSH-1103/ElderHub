@@ -27,6 +27,9 @@ public class BedDetailsQuery {
     // 老人类型：1-自理老人（未配置护理项目，默认） 2-护理老人（已配置护理项目） 0/null-全部
     private Integer customerType = 1;
 
+    // 申请候选人过滤：1-退住申请 2-外出申请（null-不过滤，用于列表查询）
+    private Integer applyType;
+
     private Integer pageNum = 1;
 
     private Integer pageSize = 10;

@@ -39,4 +39,7 @@ public class BedDetailsVO {
 
     // 状态描述文本
     private String statusMsg;
+
+    // 床位实时状态：1-空闲 2-已入住 3-外出
+    private Integer bedStatus;
 }

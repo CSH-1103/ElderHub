@@ -45,9 +45,27 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer>
     @Override
     @Transactional(rollbackFor = Exception.class)//开启事务保证数据一致性
     public void saveCustomer(Customer customer) {
+        //0.必填校验
+        if (customer.getCustomer_name() == null || customer.getCustomer_name().isBlank()) {
+            throw new RuntimeException("客户姓名不能为空");
+        }
+        if (customer.getIdcard() == null || customer.getIdcard().isBlank()) {
+            throw new RuntimeException("身份证号不能为空");
+        }
+        customer.setIdcard(customer.getIdcard().trim());
+        // 身份证号唯一（仅与未删除记录比较）
+        Long idcardCount = this.count(new QueryWrapper<Customer>()
+                .eq("idcard", customer.getIdcard())
+                .eq("is_deleted", 0));
+        if (idcardCount > 0) {
+            throw new RuntimeException("身份证号已存在");
+        }
+        if (customer.getCheckin_date() == null || customer.getExpiration_date() == null) {
+            throw new RuntimeException("入住日期和合同到期日期不能为空");
+        }
         //1.校验
         if(customer.getExpiration_date().before(customer.getCheckin_date())){
-            throw new RuntimeException();
+            throw new RuntimeException("合同到期日期不能早于入住日期");
         }
         //2.根据出生日期自动计算年龄
         if (customer.getBirthday() != null) {
@@ -69,7 +87,8 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer>
         details.setCustomer_id(customer.getId());
         details.setBed_id(customer.getBed_id());
         details.setStart_date(customer.getCheckin_date());
-        details.setEnd_date(null);
+        // 退住时间=合同到期日（需求规约：床位详情的退住时间即合同到期时间）
+        details.setEnd_date(customer.getExpiration_date());
         bedDetailsMapper.insert(details);
     }
 
@@ -85,6 +104,17 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer>
         if(oldcustomer==null){
             throw new RuntimeException("客户不存在");
         }
+        //身份证号唯一性校验（排除自身）
+        if (customer.getIdcard() != null && !customer.getIdcard().isBlank()) {
+            customer.setIdcard(customer.getIdcard().trim());
+            Long idcardCount = this.count(new QueryWrapper<Customer>()
+                    .eq("idcard", customer.getIdcard())
+                    .eq("is_deleted", 0)
+                    .ne("id", customer.getId()));
+            if (idcardCount > 0) {
+                throw new RuntimeException("身份证号已存在");
+            }
+        }
         //2.校验日期
         if(customer.getExpiration_date()!=null&&customer.getCheckin_date()!=null){
             if(customer.getExpiration_date().before(customer.getCheckin_date())){
@@ -99,11 +129,12 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer>
         //4.判断到期日期是否变更了
         boolean datechange = !oldcustomer.getExpiration_date().equals(customer.getExpiration_date());
         if(datechange && oldcustomer.getCheckin_date()!=null){
-            BedDetails details = bedDetailsMapper.selectOne(//去数据库的bed_details表里查 只找一条记录
+            BedDetails details = bedDetailsMapper.selectOne(//去数据库的bed_details表里查 当前生效的那条记录
                     new QueryWrapper<BedDetails>()
                             .eq("customer_id",customer.getId())//条件1-eq(等价)
-                            .isNull("end_date")//条件2-非空
-                            .last("LIMIT 1")//条件3-只返回一条
+                            .eq("is_deleted", 0)//条件2-当前生效（未退住、未调床）
+                            .orderByDesc("id")//条件3-取最新一条
+                            .last("LIMIT 1")
             );
             if(details!=null){
                 //更新日期
@@ -122,8 +153,9 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer>
         if(customer==null){
             throw new RuntimeException("客户不存在");
         }
-        //逻辑删除客户
-        this.removeById(id);
+        //逻辑删除客户（手动置 is_deleted=1，保留历史数据）
+        customer.setIs_deleted(1);
+        this.updateById(customer);
         //还原床位状态
         if(customer.getBed_id()!=null){
             Bed bed = bedMapper.selectById(customer.getBed_id());
@@ -132,15 +164,17 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer>
                 bedMapper.updateById(bed);
             }
         }
-        //逻辑删除当前生效的入住记录
+        //逻辑删除当前生效的入住记录（保留使用历史）
         BedDetails details = bedDetailsMapper.selectOne(
                 new QueryWrapper<BedDetails>()
                         .eq("customer_id",id)
-                        .isNull("end_date")
+                        .eq("is_deleted", 0)
                         .last("LIMIT 1")
         );
         if(details!=null){
-            bedDetailsMapper.deleteById(details.getId());
+            details.setEnd_date(new java.util.Date());
+            details.setIs_deleted(1);
+            bedDetailsMapper.updateById(details);
         }
     }
 
@@ -196,7 +230,8 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer>
     @Override
     public List<Customer> listNoNurse() {
         LambdaQueryWrapper<Customer> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.isNull(Customer::getBed_id) // 管家ID为空
+        queryWrapper.isNull(Customer::getBed_id) // 未分配床位
+                .eq(Customer::getIs_deleted, 0) // 排除已退住/删除客户
                 .orderByDesc(Customer::getCheckin_date); // 按入住时间倒序
 
         return this.list(queryWrapper);

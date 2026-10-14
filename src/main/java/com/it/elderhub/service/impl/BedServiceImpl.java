@@ -23,10 +23,12 @@ import com.it.elderhub.vo.RoomBedVO;
 import com.it.elderhub.vo.RoomVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -81,23 +83,16 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed>
     }
 
     /**
-     * 床位示意图（默认第一层）
+     * 床位示意图（未指定楼层时返回全部楼层）
      */
     @Override
     public List<RoomBedVO> listBedMap(String floor) {
-        // 未指定楼层时，默认取第一层
-        if (floor == null || floor.isEmpty()) {
-            QueryWrapper<Room> firstWrapper = new QueryWrapper<>();
-            firstWrapper.orderByAsc("room_floor").last("LIMIT 1");
-            Room firstRoom = roomMapper.selectOne(firstWrapper);
-            if (firstRoom == null) {
-                return List.of();
-            }
-            floor = firstRoom.getRoom_floor();
-        }
-
         QueryWrapper<Room> roomWrapper = new QueryWrapper<>();
-        roomWrapper.eq("room_floor", floor).orderByAsc("room_no");
+        // 指定楼层时按楼层过滤，否则返回全部楼层
+        if (floor != null && !floor.isEmpty()) {
+            roomWrapper.eq("room_floor", floor);
+        }
+        roomWrapper.orderByAsc("room_floor").orderByAsc("room_no");
         List<Room> rooms = roomMapper.selectList(roomWrapper);
         if (rooms == null || rooms.isEmpty()) {
             return List.of();
@@ -147,12 +142,22 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed>
         } else if (query.getCustomerType() != null && query.getCustomerType() == 1) {
             wrapper.apply("customer_id NOT IN (SELECT customer_id FROM customer_nurse_item WHERE is_deleted = 0)");
         }
+        // 申请候选人过滤（applyType：1-退住申请 2-外出申请），仅保留床位实际占用的在住客户
+        if (query.getApplyType() != null) {
+            wrapper.apply("bed_id IN (SELECT id FROM bed WHERE bed_status = 2)");
+            // 已有退住申请（待审核 0 / 已通过 1）的客户，不再出现在退住/外出申请的可选客户中；
+            // 已拒绝(2)的申请不算，允许重新申请
+            wrapper.apply("customer_id NOT IN (SELECT customer_id FROM backdown WHERE is_deleted = 0 AND audit_status IN (0, 1))");
+        }
+        Date todayStart = startOfToday();
         if (query.getStatus() != null && query.getStatus() == 1) {
-            // 正在使用：未删除 且（endDate 为空 或 endDate > 当前日期）
+            // 正在使用：未退住/调床（is_deleted=0）且合同未到期（end_date 为空 或 到期日为今天及以后）
             wrapper.eq("is_deleted", 0)
-                    .and(w -> w.isNull("end_date").or().gt("end_date", new Date()));
+                    .and(w -> w.isNull("end_date").or().ge("end_date", todayStart));
         } else if (query.getStatus() != null && query.getStatus() == 2) {
-            wrapper.and(w -> w.eq("is_deleted", 1).or().le("end_date", new Date()));
+            // 使用历史：已退住/调床（is_deleted=1），或合同已到期但尚未办理退住
+            wrapper.and(w -> w.eq("is_deleted", 1)
+                    .or(o -> o.eq("is_deleted", 0).lt("end_date", todayStart)));
         }
         wrapper.orderByDesc("id");
 
@@ -175,7 +180,6 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed>
                     : baseMapper.selectBatchIds(bedIds).stream()
                     .collect(Collectors.toMap(Bed::getId, b -> b, (v1, v2) -> v1));
 
-            Date now = new Date();
             for (BedDetails details : records) {
                 BedDetailsVO vo = new BedDetailsVO();
                 vo.setId(details.getId());
@@ -193,9 +197,22 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed>
                 vo.setEndDate(details.getEnd_date());
                 vo.setBedDetails(details.getBed_details());
 
-                boolean inUse = isInUse(details, now);
+                boolean notDeleted = details.getIs_deleted() == null || details.getIs_deleted() == 0;
+                boolean notExpired = details.getEnd_date() == null || !details.getEnd_date().before(todayStart);
+                boolean inUse = notDeleted && notExpired;
                 vo.setStatus(inUse ? 1 : 2);
-                vo.setStatusMsg(inUse ? "正在使用" : "使用历史");
+                vo.setBedStatus(bed == null ? null : bed.getBed_status());
+                if (!notDeleted) {
+                    // 已退住或已调床
+                    vo.setStatusMsg("使用历史");
+                } else if (!notExpired) {
+                    // 合同已到期但尚未办理退住：不再算在住
+                    vo.setStatusMsg("已到期");
+                } else {
+                    // 在住客户的实时状态跟随床位：外出 / 在住
+                    vo.setStatusMsg(bed != null && bed.getBed_status() != null
+                            && bed.getBed_status() == BED_STATUS_AWAY ? "外出" : "在住");
+                }
                 list.add(vo);
             }
         }
@@ -203,10 +220,56 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed>
         return new PageResult<>(list, doPage.getTotal(), doPage.getCurrent(), doPage.getSize());
     }
 
-    private boolean isInUse(BedDetails details, Date now) {
-        boolean notDeleted = details.getIs_deleted() == null || details.getIs_deleted() == 0;
-        boolean notEnded = details.getEnd_date() == null || details.getEnd_date().after(now);
-        return notDeleted && notEnded;
+    /** 当天 00:00:00，用于按"到期日当天仍算有效"比较 */
+    private Date startOfToday() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+
+    /**
+     * 合同到期自动释放床位
+     * 需求规约未规定"到期自动释放"，按业务约定实现：生效记录的退住时间（=合同到期日）早于今日时
+     * 自动退住——关闭生效入住记录、释放床位、逻辑删除客户，与"正常退住"审核通过的效果一致。
+     */
+    @Scheduled(initialDelay = 5000, fixedDelay = 60000)
+    @Transactional(rollbackFor = Exception.class)
+    public void releaseExpiredBeds() {
+        Date todayStart = startOfToday();
+        List<BedDetails> expiredList = bedDetailsMapper.selectList(new QueryWrapper<BedDetails>()
+                .eq("is_deleted", 0)
+                .isNotNull("end_date")
+                .lt("end_date", todayStart));
+        if (expiredList == null || expiredList.isEmpty()) {
+            return;
+        }
+        for (BedDetails details : expiredList) {
+            // 1.关闭生效的入住记录（退住时间=合同到期日，转为使用历史）
+            details.setIs_deleted(1);
+            bedDetailsMapper.updateById(details);
+
+            Customer customer = details.getCustomer_id() == null ? null
+                    : customerMapper.selectById(details.getCustomer_id());
+            if (customer == null || customer.getBed_id() == null) {
+                continue;
+            }
+            // 2.仅当该床位仍属于该客户时才释放，避免误放已调换/复用的床位
+            if (details.getBed_id() != null && !details.getBed_id().equals(customer.getBed_id())) {
+                continue;
+            }
+            Bed bed = this.getById(customer.getBed_id());
+            if (bed != null && bed.getBed_status() != null && bed.getBed_status() != BED_STATUS_FREE) {
+                bed.setBed_status(BED_STATUS_FREE);
+                this.updateById(bed);
+            }
+            // 3.逻辑删除客户（合同到期视为自动退住，不再出现在在住客户列表）
+            customer.setIs_deleted(1);
+            customerMapper.updateById(customer);
+        }
+        log.info("合同到期自动释放床位：共处理 {} 条", expiredList.size());
     }
 
     /**
@@ -275,12 +338,13 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed>
             bedDetailsMapper.updateById(oldDetails);
         }
 
-        // 4. 新建 beddetails：startDate = 当天，endDate = null
+        // 4. 新建 beddetails：startDate = 当天，endDate = 客户合同到期日
         BedDetails newDetails = new BedDetails();
         newDetails.setCustomer_id(customer.getId());
         newDetails.setBed_id(newBed.getId());
         newDetails.setStart_date(today);
-        newDetails.setEnd_date(null);
+        // 退住时间=客户合同到期日（与客户当前生效记录口径一致）
+        newDetails.setEnd_date(customer.getExpiration_date());
         newDetails.setBed_details(dto.getBedDetails());
         newDetails.setIs_deleted(0);
         bedDetailsMapper.insert(newDetails);
