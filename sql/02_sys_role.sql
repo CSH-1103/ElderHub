@@ -1,4 +1,6 @@
 -- 02 系统角色表
+
+USE elderhub;
 DROP TABLE IF EXISTS `role`;
 CREATE TABLE `role` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '角色ID',

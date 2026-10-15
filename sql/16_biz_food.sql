@@ -1,4 +1,6 @@
 -- 16 食品信息表
+
+USE elderhub;
 DROP TABLE IF EXISTS `food`;
 CREATE TABLE `food` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '食品ID',

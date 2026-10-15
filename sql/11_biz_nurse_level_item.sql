@@ -1,4 +1,6 @@
 -- 11 护理等级项目关联表
+
+USE elderhub;
 DROP TABLE IF EXISTS `nurse_level_item`;
 CREATE TABLE `nurse_level_item` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '关联ID',

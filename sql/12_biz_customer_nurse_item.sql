@@ -1,4 +1,6 @@
 -- 12 客户已购护理条目表
+
+USE elderhub;
 DROP TABLE IF EXISTS `customer_nurse_item`;
 CREATE TABLE `customer_nurse_item` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '条目ID',

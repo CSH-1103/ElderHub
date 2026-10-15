@@ -1,4 +1,6 @@
 -- 14 外出登记表
+
+USE elderhub;
 DROP TABLE IF EXISTS `outward`;
 CREATE TABLE `outward` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '登记ID',

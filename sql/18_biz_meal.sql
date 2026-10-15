@@ -1,4 +1,6 @@
 -- 18 膳食日历表
+
+USE elderhub;
 DROP TABLE IF EXISTS `meal`;
 CREATE TABLE `meal` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '菜单ID',

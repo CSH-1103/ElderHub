@@ -1,4 +1,6 @@
 -- 01 系统用户表
+
+USE elderhub;
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '用户ID',

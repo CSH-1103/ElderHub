@@ -1,4 +1,6 @@
 -- 19 客户膳食配置表
+
+USE elderhub;
 DROP TABLE IF EXISTS `customer_meal`;
 CREATE TABLE `customer_meal` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '配置ID',

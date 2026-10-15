@@ -1,4 +1,6 @@
 -- 08 在住客户/老人表
+
+USE elderhub;
 DROP TABLE IF EXISTS `customer`;
 CREATE TABLE `customer` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '客户ID',

@@ -1,4 +1,6 @@
 -- 05 房间信息表
+
+USE elderhub;
 DROP TABLE IF EXISTS `room`;
 CREATE TABLE `room` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '房间ID',
