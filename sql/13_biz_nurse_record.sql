@@ -1,4 +1,6 @@
 -- 13 护理执行记录表
+
+USE elderhub;
 DROP TABLE IF EXISTS `nurse_record`;
 CREATE TABLE `nurse_record` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '记录ID',

@@ -48,7 +48,7 @@ public class OutwardServiceImpl extends ServiceImpl<OutwardMapper, Outward> impl
         LambdaQueryWrapper<Outward> wrapper = new LambdaQueryWrapper<>();
 
         if (query.getCustomerName() != null && !query.getCustomerName().isEmpty()) {
-            wrapper.apply("customer_id IN (SELECT id FROM customer WHERE name LIKE {0})", "%" + query.getCustomerName() + "%");
+            wrapper.apply("customer_id IN (SELECT id FROM customer WHERE customer_name LIKE {0})", "%" + query.getCustomerName() + "%");
         }
         wrapper.orderByDesc(Outward::getOutgoingtime);
         return convertToPageResult(this.page(page, wrapper));
@@ -150,7 +150,7 @@ public class OutwardServiceImpl extends ServiceImpl<OutwardMapper, Outward> impl
     private PageResult<OutwardVO> convertToPageResult(IPage<Outward> doPage) {
         List<OutwardVO> list = doPage.getRecords().stream().map(d -> {
             OutwardVO vo = new OutwardVO();
-            vo.setCustomerId(d.getId());
+            vo.setId(d.getId());
             vo.setCustomerId(d.getCustomer_id());
             // 注意：如果前端需要展示客户姓名，这里建议通过联表查询或者单独查询赋值给 vo.setCustomerName(...)
 

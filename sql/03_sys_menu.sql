@@ -1,4 +1,6 @@
 -- 03 菜单路由表
+
+USE elderhub;
 DROP TABLE IF EXISTS `menu`;
 CREATE TABLE `menu` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '菜单ID',

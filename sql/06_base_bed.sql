@@ -1,4 +1,6 @@
 -- 06 床位信息表
+
+USE elderhub;
 DROP TABLE IF EXISTS `bed`;
 CREATE TABLE `bed` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '床位ID',

@@ -1,4 +1,6 @@
 -- 10 护理等级表
+
+USE elderhub;
 DROP TABLE IF EXISTS `nurse_level`;
 CREATE TABLE `nurse_level` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '护理等级ID',

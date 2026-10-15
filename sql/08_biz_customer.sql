@@ -1,4 +1,6 @@
 -- 08 在住客户/老人表
+
+USE elderhub;
 DROP TABLE IF EXISTS `customer`;
 CREATE TABLE `customer` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '客户ID',
@@ -18,7 +20,10 @@ CREATE TABLE `customer` (
   `blood_type` varchar(20) NOT NULL COMMENT '血型',
   `psychosomatic_state` varchar(255) DEFAULT NULL COMMENT '身心状况描述',
   `attention` varchar(255) DEFAULT NULL COMMENT '护理注意事项',
-  `filepath` varchar(50) NOT NULL COMMENT '头像文件路径',
+  `family_member` varchar(50) DEFAULT NULL COMMENT '家属',
+  `user_id` int DEFAULT NULL COMMENT '管家用户ID',
+  `butler_id` int DEFAULT NULL COMMENT '健康管家ID',
+  `filepath` varchar(50) DEFAULT NULL COMMENT '头像文件路径',
   `is_deleted` int NOT NULL DEFAULT '0' COMMENT '逻辑删除（0:正常 1:删除）',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='在住客户/老人表';

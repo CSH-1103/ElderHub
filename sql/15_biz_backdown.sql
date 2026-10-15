@@ -1,4 +1,6 @@
 -- 15 退住登记表
+
+USE elderhub;
 DROP TABLE IF EXISTS `backdown`;
 CREATE TABLE `backdown` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '登记ID',

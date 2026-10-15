@@ -1,4 +1,6 @@
 -- 09 护理项目内容表
+
+USE elderhub;
 DROP TABLE IF EXISTS `nurse_content`;
 CREATE TABLE `nurse_content` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '护理项目ID',

@@ -12,17 +12,17 @@ ElderHub 是一套面向养老院、社区养老中心等养老机构的**前后
 
 ### 后端核心
 
-- 后端框架：Spring Boot 2.x
-- 持久层框架：MyBatis
+- 后端框架：Spring Boot 3.1.10
+- 持久层框架：MyBatis-Plus 3.5.6
 - 数据库：MySQL 8.0
-- 项目构建工具：Maven 3.6+
-- JDK 版本：JDK 1.8
+- 项目构建工具：Maven 3.8+
+- JDK 版本：JDK 17
 
 ### 后端辅助工具 & 技术
 
 - 版本控制：Git + GitHub（Fork + PR 团队协作模式）
-- 接口文档：Knife4j（接口在线预览与调试）
-- 工具库：Hutool（常用工具封装）
+- 接口文档：SpringDoc（Swagger 接口文档）
+- 工具库：Lombok、JJWT（登录令牌）
 - 参数校验：Hibernate Validator
 - 日志框架：SLF4J + Logback
 - 代码规范：统一命名规范，代码格式化
@@ -42,7 +42,7 @@ ElderHub 是一套面向养老院、社区养老中心等养老机构的**前后
 ## 项目目录结构
 
 ElderHub
-- elderhub-admin-front        # 前端项目文件夹
+- elderhub-frontend            # 前端项目文件夹
     - public                    # 静态资源（图片、favicon等）
     - src
         - api                     # 接口请求封装，按模块划分请求函数
@@ -171,22 +171,19 @@ ElderHub
 
 ## 数据库设计说明
 
-数据库名称：`elderhub_db`
-采用分表设计，核心数据表：
+数据库名称：`elderhub`（注意：不是 elderhub_db，application.yml 中已配置）
+核心数据表：
 
-1. `sys_user`：系统用户表（管理员、护工账号）
-2. `sys_role`：角色表
-3. `sys_user_role`：用户角色关联表
-4. `elder`：老人基础信息表
-5. `family_member`：老人家属信息表
-6. `bed`：床位信息表
-7. `nurse_item`：护理项目表
-8. `nurse_plan`：护理计划表
-9. `nurse_record`：护理执行记录表
-10. `health_record`：老人健康体检记录表
-11. `sys_dict`：数据字典表
-12. `sys_notice`：系统公告表
-13. `sys_oper_log`：系统操作日志表
+1. `user`：系统用户表（管理员、健康管家账号）
+2. `role` / `menu` / `rolemenu`：角色、菜单及角色菜单关联表
+3. `room` / `bed`：房间与床位表（基础数据，需执行 `sql/20_seed_room_bed.sql` 初始化）
+4. `bed_details`：床位使用详情表（入住历史，判断在用/历史）
+5. `customer`：在住客户/老人表
+6. `outward` / `backdown`：外出登记表 / 退住登记表
+7. `nurse_level` / `nurse_content` / `nurse_level_item`：护理级别、护理项目及级别项目关联表
+8. `customer_nurse_item` / `nurse_record`：客户已购护理项目表 / 护理执行记录表
+9. `food` / `meal`：食品信息表 / 膳食日历表
+10. `customer_preference` / `customer_meal`：客户饮食偏好表 / 客户膳食配置表
 
 >
 > 所有表都包含创建时间、更新时间、创建人、更新人字段，用于数据追踪。
@@ -197,7 +194,7 @@ ElderHub
 
 **后端**
 
-- JDK 1.8
+- JDK 17
 - MySQL 8.0
 - Maven 3.6+
 - IDEA 开发工具
@@ -212,15 +209,18 @@ ElderHub
 #### 后端启动
 
 1. 克隆项目到本地
-2. 创建数据库 `elderhub_db`，执行 `sql` 目录下的建表脚本与基础数据脚本
+2. 创建数据库 `elderhub`（utf8mb4），按顺序执行 `sql` 目录下的脚本 `00~23`：
+   - `00~19`：建库建表脚本
+   - `20~23`：基础数据脚本（`20` 房间/床位、`21` 角色/账号、`22` 护理示例、`23` 餐饮示例；22/23 也可不执行，在页面中自行维护）
+   - 初始账号：`admin / 123456`（管理员），`butler / 123456`、`LYS / 1234`（健康管家）
 3. 修改 `resources/application.yml` 文件，配置数据库 IP、端口、用户名、密码
 4. IDEA 中 Maven 刷新，加载全部依赖包
 5. 找到项目主启动类，运行 SpringBoot 项目
-6. 启动成功后，访问 Knife4j 接口文档地址，查看并调试接口
+6. 启动成功后，访问 Swagger 接口文档 http://localhost:8080/ElderHub/swagger-ui.html 查看并调试接口
 
 #### 前端启动
 
-1. 进入前端项目目录 `elderhub-admin-front`
+1. 进入前端项目目录 `elderhub-frontend`
 2. 安装依赖
 3. 修改 `src/api/request.js` 后端接口地址，指向后端服务地址
 4. 本地开发启动

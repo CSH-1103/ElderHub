@@ -1,4 +1,6 @@
 -- 07 床位使用详情表
+
+USE elderhub;
 DROP TABLE IF EXISTS `bed_details`;
 CREATE TABLE `bed_details` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '详情ID',

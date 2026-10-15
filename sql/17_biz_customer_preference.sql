@@ -1,4 +1,6 @@
 -- 17 客户饮食喜好表
+
+USE elderhub;
 DROP TABLE IF EXISTS `customer_preference`;
 CREATE TABLE `customer_preference` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '喜好ID',
